@@ -7,7 +7,7 @@ const root=resolve('dist'),types={'.html':'text/html; charset=utf-8','.js':'text
 http.createServer(async(req,res)=>{
  try{
   const url=new URL(req.url,'http://127.0.0.1:8766');
-  if(['/api/rankings','/api/indexes'].includes(url.pathname)){
+  if(['/api/rankings','/api/indexes','/api/sentiment','/api/mood'].includes(url.pathname)){
    const response=await serveApi(url,seed);res.writeHead(response.status,Object.fromEntries(response.headers));res.end(Buffer.from(await response.arrayBuffer()));return;
   }
   const path=resolve(root,'.'+decodeURIComponent(url.pathname==='/'?'/index.html':url.pathname));
