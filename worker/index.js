@@ -4,7 +4,7 @@ const allowedOrigins=new Set(['https://working-with-ai.github.io','http://127.0.
 export default {async fetch(request){
  const url=new URL(request.url),origin=request.headers.get('Origin');
  if(!['/api/rankings','/api/indexes'].includes(url.pathname))return new Response('Not found',{status:404});
- if(origin&&!allowedOrigins.has(origin))return new Response('Origin not allowed',{status:403});
+ if(origin&&origin!==url.origin&&!allowedOrigins.has(origin))return new Response('Origin not allowed',{status:403});
  const headers=new Headers({'Vary':'Origin'});
  if(origin)headers.set('Access-Control-Allow-Origin',origin);
  if(request.method==='OPTIONS'){

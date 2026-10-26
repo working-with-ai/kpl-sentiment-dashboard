@@ -6,7 +6,8 @@
   "scripts": {
     "build": "node scripts/build.mjs",
     "dev": "node scripts/dev.mjs",
-    "deploy:api": "npm run build && wrangler deploy",
+    "deploy": "npm run build && wrangler deploy",
+    "deploy:api": "npm run deploy",
     "login:api": "wrangler login"
   },
   "devDependencies": {
