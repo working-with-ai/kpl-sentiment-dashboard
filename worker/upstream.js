@@ -10,12 +10,13 @@ export async function fetchMarket(kind,date,{start='0925',end='1500',offset=0,li
  const realtime=date==='latest';
  let params;
  if(kind==='rankings'){
-  params={c:realtime?'NewStockRanking':'HisStockRanking',a:realtime?'RealRankingInfo_W8':'HisRankingInfo_W8',Date:realtime?'':date,Type:'1',Ratio:'6',Order:'1',Filter:'0',Isst:'0',index:String(offset),st:String(limit),FilterMotherboard:'0',FilterGem:'0',FilterTIB:'0',FilterBJS:'0'};
-  if(start!=='0925'||end!=='1500'){params.RStart=start;params.REnd=end;params.st=String(Math.min(limit,1000));}
+  params={c:realtime?'NewStockRanking':'HisStockRanking',a:realtime?'RealRankingInfo_W8':'HisRankingInfo_W8',Date:realtime?'':date,Type:realtime?'6':'1',Ratio:realtime?'0':'6',Order:'1',Filter:'0',Isst:'0',index:String(offset),st:String(limit),FilterMotherboard:'0',FilterGem:'0',FilterTIB:'0',FilterBJS:'0'};
+  if(start!=='0925'||end!=='1500'){params.RStart=start;params.REnd=end;params.Ratio='0';params.st=String(Math.min(limit,1000));}
  }else if(kind==='indexes')params=realtime?{c:'StockL2Data',a:'GetZsTrend_Narrow'}:{c:'StockL2History',a:'GetZsTrend_Narrow',Day:date};
  else if(kind==='sentiment')params={c:realtime?'MarketSentiment':'HisMarketSentiment',a:'GetSentimentChart',mode,date:realtime?'':date};
  else if(kind==='mood')params=realtime?{c:'MarketMood',a:'MoodNumCount'}:{c:'Emotion',a:'MoodNumCount',Day:date};
  else throw new Error('未知数据类型');
+ if(realtime&&kind==='rankings')params.st=String(Math.min(limit,1000));
  const data=await requestUpstream(params,realtime);
  if(kind==='rankings'&&(!Array.isArray(data.list)||!data.list.length))throw new Error(realtime?'上游已响应，但 '+(data.Day?.[0]||'当前')+' 榜单暂无数据':params.RStart?'上游暂无该时段的榜单数据':'该日期没有可用榜单，请选择交易日');
  if(kind==='indexes'&&(!Array.isArray(data.List)||!data.List.length))throw new Error('该日期没有可用指数走势');

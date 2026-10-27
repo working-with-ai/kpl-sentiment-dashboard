@@ -13,10 +13,14 @@ export async function serveApi(url,seed,{db,sentimentSeed}={}){
  if(saved&&Date.now()-saved.time<(realtime?10000:300000))return Response.json(saved.data);
  try{
   const data=await fetchMarket(kind,date,{start,end,mode});
-  if(ranking&&(start!=='0925'||end!=='1500')){
-   const rows=[...data.list],codes=new Set(rows.map(row=>row[0]));
-   while(rows.length<Number(data.Count)){const page=await fetchMarket(kind,date,{start,end,offset:rows.length,limit:1000});if(Number(page.Count)!==Number(data.Count)||page.list.some(row=>codes.has(row[0])))throw new Error('区间榜单分页发生变化，请重新查询');for(const row of page.list)codes.add(row[0]);rows.push(...page.list);}
-   data.list=rows;
+  if(ranking&&(realtime||start!=='0925'||end!=='1500')){
+   const rows=new Map(data.list.map(row=>[row[0],row]));let offset=data.list.length;
+   while(offset<Number(data.Count)){
+    const page=await fetchMarket(kind,date,{start,end,offset,limit:1000});
+    if(Number(page.Count)!==Number(data.Count)||page.Day?.[0]!==data.Day?.[0])throw new Error('榜单分页发生变化，请重新查询');
+    for(const row of page.list){if(!realtime&&rows.has(row[0]))throw new Error('区间榜单分页发生变化，请重新查询');rows.set(row[0],row);}offset+=page.list.length;
+   }
+   data.list=[...rows.values()];if(data.list.length<Number(data.Count))data._warning='实时分页更新中，已返回 '+data.list.length+' / '+data.Count+' 只股票。';
   }
   const dataDate=iso(data.Day?.[0]||data.date||data.List?.[0]?.day||data.days?.at(-1)?.date||(kind==='mood'?(realtime?today:date):''));
   if(!realtime&&kind==='sentiment'&&mode==='five_days'&&dataDate!==date)throw new Error('五日走势截止日期与查询日期不符');
