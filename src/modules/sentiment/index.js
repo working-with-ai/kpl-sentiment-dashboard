@@ -65,6 +65,7 @@ export async function init(root){
  }
  function fromEvent(event){if(!geometry||!chartPoints.length)return;const rect=$('chart').getBoundingClientRect(),position=(event.clientX-rect.left-geometry.L)/(geometry.W-geometry.L-geometry.R)*(data.days.length*240);let lo=0,hi=chartPoints.length-1;while(lo<hi){const mid=Math.floor((lo+hi)/2);if(chartPoints[mid].position<position)lo=mid+1;else hi=mid;}if(lo>0&&Math.abs(chartPoints[lo-1].position-position)<Math.abs(chartPoints[lo].position-position))lo--;showPoint(lo);}
  function hidePoint(){if($('crosshair'))$('crosshair').setAttribute('visibility','hidden');$('tooltip').hidden=true;}
+ $('chart').oncontextmenu=event=>event.preventDefault();
  $('chart').onpointerdown=event=>{if(event.pointerType==='touch'){touchActive=false;clearTimeout(touchTimer);touchTimer=setTimeout(()=>{touchActive=true;fromEvent(event);},300);}else fromEvent(event);};
  $('chart').onpointermove=event=>{if(event.pointerType!=='touch'||touchActive)fromEvent(event);};
  $('chart').addEventListener('touchmove',event=>{if(touchActive)event.preventDefault();else clearTimeout(touchTimer);},{passive:false});

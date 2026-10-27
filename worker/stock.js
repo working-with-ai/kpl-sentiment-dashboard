@@ -46,7 +46,8 @@ export async function serveStock(url){
   let data,dataDate,dataTime,currentWarning='';
   const readCurrent=async type=>{try{return candles(await requestUpstream({c:'StockLineData',a:'GetKLineToday_W14',StockID:code,Type:type},true)).filter(p=>p.date<=cutoff);}catch(error){currentWarning='当日 K 线增量查询失败（'+error.message+'），图表使用历史接口数据。';return [];}};
   if(kind==='kline'){
-   const page=await loadBars(code,period,cursor,cutoff);let rows=page.rows;
+   const page=await loadBars(code,period,cursor,cutoff);let rows=page.rows,nextCursor=page.nextCursor;
+   if(cursor===0&&rows.length<100&&nextCursor!==null){const older=await loadBars(code,period,nextCursor,cutoff);rows=[...older.rows,...rows];nextCursor=older.nextCursor;}
    if(cursor===0&&realtime&&!['w','m'].includes(period)){
     const updates=await readCurrent(period),map=new Map(rows.map(p=>[p.time,p]));for(const p of updates)map.set(p.time,p);rows=[...map.values()].sort((a,b)=>String(a.time).localeCompare(String(b.time)));
    }
@@ -59,7 +60,7 @@ export async function serveStock(url){
    }
    if(!rows.length)throw new Error('所选日期没有可用 K 线');
    dataDate=rows.at(-1).date;dataTime=typeof rows.at(-1).time==='number'?new Date(rows.at(-1).time*1000).toISOString():null;
-   data={code,period,candles:rows,nextCursor:page.nextCursor,volumeUnit:'手',priceBasis:'接口原始价格；上游未注明复权方式'};
+   data={code,period,candles:rows,nextCursor,volumeUnit:'手',priceBasis:'接口原始价格；上游未注明复权方式'};
   }else{
    const params=kind==='quote'?{c:realtime?'StockL2Data':'StockL2History',a:'GetStockPanKou',StockID:code,...(!realtime?{Day:date}:{})}:{c:realtime?'StockL2Data':'StockL2History',a:realtime?'GetStockTrendIncremental':'GetStockTrend',StockID:code,...(realtime?{Type:'1'}:{Day:date})};
    data=await requestUpstream(params,realtime);dataDate=iso(data.day);dataTime=data.time||data.ts||null;
