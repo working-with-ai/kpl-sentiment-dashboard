@@ -7,7 +7,7 @@ export async function readArchive(db,date,kind){
  if(!results.length)return null;
  const compressed=new Blob(results.map(row=>new Uint8Array(row.payload)));
  const data=await new Response(compressed.stream().pipeThrough(new DecompressionStream('gzip'))).json();
- return {...data,_source:'archive',_retrievedAt:day.saved_at,_archivedAt:day.saved_at};
+ return {...data,_source:'archive',_retrievedAt:new Date().toISOString(),_archivedAt:day.saved_at};
 }
 export async function archiveDay(db,date){
  const existing=await db.prepare('SELECT stock_count FROM archive_days WHERE trade_date = ?').bind(date).first();

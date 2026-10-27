@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#101d2c">
 <meta name="description" content="开盘数据：情绪周期、实时龙虎榜与主力资金组合提醒。">
+<script>document.documentElement.dataset.theme=localStorage.getItem('kpl-theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');</script>
 <title>开盘数据 · 情绪周期</title>
 <link rel="stylesheet" href="src/shell.css">
 <link rel="stylesheet" href="src/modules/sentiment/style.css">
@@ -18,7 +19,7 @@
  <div class="shell-sidebar-note">从情绪到资金<br>在同一个工作台观察市场</div>
 </aside>
 <div class="shell-content">
- <header class="shell-topbar"><span id="module-title">情绪周期</span><div class="shell-monitor"><span id="monitor-status" role="status">实时监控未开启</span><button type="button" id="global-alerts-button" disabled>资金提醒</button></div></header>
+ <header class="shell-topbar"><span id="module-title">情绪周期</span><div class="shell-monitor"><span id="monitor-status" role="status">资金监控未开启</span><button type="button" id="global-alerts-button" disabled>资金提醒</button><button type="button" id="theme-toggle" aria-label="切换深浅主题"></button></div></header>
  <p id="module-error" role="alert" hidden></p>
  <div id="module-panels"></div>
 </div>

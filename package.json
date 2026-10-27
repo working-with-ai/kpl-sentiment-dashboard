@@ -12,5 +12,8 @@
   },
   "devDependencies": {
     "wrangler": "^4.151.1"
+  },
+  "dependencies": {
+    "lightweight-charts": "5.2.1"
   }
 }
