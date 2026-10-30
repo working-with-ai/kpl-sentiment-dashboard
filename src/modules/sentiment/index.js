@@ -11,6 +11,7 @@ export async function init(root){
  async function fetchJson(path,signal){const response=await fetch(apiUrl(path),{signal}),value=await response.json();if(!response.ok||value.error)throw new Error(value.error||'查询失败');return value;}
  function notice(text,error=false){$('notice').hidden=!text;$('notice').textContent=text;$('notice').classList.toggle('error',error);}
  async function load(){
+  if(state.date===today())state.date='latest';
   const id=++requestId;controller?.abort();controller=new AbortController();const signal=controller.signal,{date,mode}=state;loading=true;save();controls();$('refresh').disabled=true;notice('');
   try{
    const primary=await fetchJson('/api/sentiment?'+new URLSearchParams({date,mode}),signal);if(id!==requestId)return;

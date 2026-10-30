@@ -6,13 +6,14 @@ const seed=await (await fetch(new URL("./snapshot.json",import.meta.url))).json(
 const number=x=>Number.isFinite(Number(x))?Number(x):0,money=x=>{const n=number(x),a=Math.abs(n);return(n<0?'−':'')+(a>=1e8?(a/1e8).toFixed(2)+'亿':a>=1e4?(a/1e4).toFixed(1)+'万':a.toFixed(0));},fixed=(v,d=2)=>number(v).toFixed(d),sign=v=>(number(v)>0?'+':'')+fixed(v),color=v=>number(v)>0?'up':number(v)<0?'down':'muted',clock=t=>String(t).replace(/^(\d{2})(\d{2})$/,'$1:$2');
 const columns=[{key:'price',name:'价格',index:5,fmt:v=>fixed(v)},{key:'change',name:'涨幅',index:6,fmt:v=>sign(v)+'%'},{key:'rangeChange',name:'区间涨幅',index:57,fmt:v=>sign(v)+'%'},{key:'net',name:'主力净额',index:13,fmt:money},{key:'amount',name:'成交额',index:7,fmt:money},{key:'two',name:'2分钟成交额',index:55,fmt:money},{key:'pop',name:'人气值',index:58,fmt:v=>number(v).toLocaleString()},{key:'rank',name:'排名变化',index:59,fmt:v=>(number(v)>0?'↑ ':number(v)<0?'↓ ':'— ')+Math.abs(number(v))},{key:'turnover',name:'换手率',index:25,fmt:v=>fixed(v)+'%'},{key:'buy',name:'主力买',index:11,fmt:money},{key:'sell',name:'主力卖',index:12,fmt:money},{key:'float',name:'实际流通',index:10,fmt:money}];
 const savedView=JSON.parse(sessionStorage.getItem('kpl-radar-view')||'{}');
+let tableScroll=savedView.scroll||0,tableScrollLeft=savedView.scrollLeft||0;
 let columnOrder=JSON.parse(localStorage.getItem('kpl-column-order')||'null')||columns.map(c=>c.key);
 let visible=new Set(JSON.parse(localStorage.getItem('kpl-visible-columns')||'null')||['price','change','rangeChange','net','amount','two','pop','turnover']),rows=seed.ranking.list,indexes=seed.indexes.List,selected=rows[0]?.[0],sort='net',direction=-1,theme='',page=1,pageSize=30,filtered=[],currentDate='2026-10-23',live=false,requestId=0,source='snapshot',appliedRange=['0925','1500'];
 const minutes=['0925'];for(let h=9;h<=15;h++)for(let m=0;m<60;m++){const x=h*60+m;if((x>=570&&x<=690)||(x>=780&&x<=900))minutes.push(String(h).padStart(2,'0')+String(m).padStart(2,'0'));}
 $('start-range').max=$('end-range').max=minutes.length-1;$('end-range').value=minutes.length-1;
 let requestedDate=initialRoute?.code?initialRoute.date:(savedView.requestedDate||'latest'),abortController;
 const stockView=createStockView(root,{navigate,getContext:()=>({rows:filtered,date:source==='realtime'&&requestedDate==='latest'?'latest':currentDate}),onSelect:code=>{selected=code;renderTable();}});
-function saveView(){sessionStorage.setItem('kpl-radar-view',JSON.stringify({requestedDate,live,date:$('date').value,start:Number($('start-range').value),end:Number($('end-range').value),search:$('search').value,board:$('board').value,flow:$('flow').value,cap:$('marketcap').value,noST:$('no-st').checked,selected,sort,direction,theme,page,pageSize,scroll:$('table-scroll').scrollTop,scrollLeft:$('table-scroll').scrollLeft}));}
+function saveView(){if(!root.hidden){tableScroll=$('table-scroll').scrollTop;tableScrollLeft=$('table-scroll').scrollLeft;}sessionStorage.setItem('kpl-radar-view',JSON.stringify({requestedDate,live,date:$('date').value,start:Number($('start-range').value),end:Number($('end-range').value),search:$('search').value,board:$('board').value,flow:$('flow').value,cap:$('marketcap').value,noST:$('no-st').checked,selected,sort,direction,theme,page,pageSize,scroll:tableScroll,scrollLeft:tableScrollLeft}));}
 const range=()=>[minutes[Number($('start-range').value)],minutes[Number($('end-range').value)]];
 function board(code){return /^(688|689)/.test(code)?'star':/^(300|301)/.test(code)?'gem':/^(4|8|92)/.test(code)?'bse':'main'}
 function groupData(data){const map=new Map();data.forEach(r=>{const name=String(r[39]||String(r[4]).split('、')[0]||'其他');map.set(name,(map.get(name)||0)+number(r[13]));});return [...map].sort((a,b)=>b[1]-a[1]);}
@@ -29,7 +30,7 @@ function renderDetail(){const r=rows.find(r=>r[0]===selected);if(!r){$('detail')
 function sparkPath(points,w,h,pre){const vals=points.map(p=>number(p[1])),lo=Math.min(...vals,number(pre)),hi=Math.max(...vals,number(pre)),span=hi-lo||1;return vals.map((v,i)=>(i?'L':'M')+(i/Math.max(1,vals.length-1)*(w-4)+2).toFixed(1)+','+(h-4-(v-lo)/span*(h-8)).toFixed(1)).join(' ')}
 function renderIndexes(){const names={'SH000001':'上证指数','SZ399001':'深证成指','SZ399006':'创业板指'};$('index-strip').innerHTML=indexes.map(x=>{const p=number(x.trend.at(-1)?.[1]),change=p-number(x.preclose_px),rate=change/number(x.preclose_px)*100;return `<div class="index-card"><div class="index-name">${names[x.code]||esc(x.code)}</div><div class="index-value num ${color(change)}">${fixed(p)}<span class="index-change">${sign(change)} / ${sign(rate)}%</span></div><div class="index-turnover">成交额 ${money(x.total_turnover)}</div><svg class="index-spark" viewBox="0 0 115 48" role="img" aria-label="${names[x.code]}分时走势"><path d="${sparkPath(x.trend,115,48,x.preclose_px)}" fill="none" stroke="${change>=0?'var(--red)':'var(--green)'}" stroke-width="1.6"/></svg></div>`}).join('');renderMarketChart();}
 function renderMarketChart(){
- const svg=$('market-chart'),W=Math.max(260,svg.clientWidth),H=100,index=indexes.find(x=>x.code==='SH000001')||indexes[0];if(!index)return;
+ const svg=$('market-chart'),W=Math.max(260,svg.clientWidth),H=100,index=indexes.find(x=>x.code==='SH000001')||indexes[0];if(!index){svg.replaceChildren();return;}
  const points=index.trend||[],vals=points.map(p=>number(p[1])),lo=Math.min(...vals,number(index.preclose_px)),hi=Math.max(...vals,number(index.preclose_px)),span=hi-lo||1,L=12,R=W-12,x=i=>L+i/(minutes.length-1)*(R-L),path=points.map((p,i)=>{const pos=minutes.indexOf(p[0].replace(':',''));return (i?'L':'M')+x(Math.max(0,pos)).toFixed(1)+','+(70-(number(p[1])-lo)/span*55).toFixed(1);}).join(' '),left=x(Number($('start-range').value)),right=x(Number($('end-range').value));
  svg.setAttribute('viewBox',`0 0 ${W} ${H}`);svg.innerHTML=`<rect x="${left}" y="6" width="${Math.max(1,right-left)}" height="70" fill="var(--accent)" opacity=".1"/><path d="${path}" fill="none" stroke="var(--red)" stroke-width="1.5"/>`+['start','end'].map((side,i)=>{const value=Number($(side+'-range').value),xx=i?right:left;return `<g role="slider" tabindex="0" aria-label="${i?'区间终点':'区间起点'}" aria-valuemin="0" aria-valuemax="${minutes.length-1}" aria-valuenow="${value}" aria-valuetext="${clock(minutes[value])}" data-handle="${side}"><line x1="${xx}" x2="${xx}" y1="5" y2="76" stroke="var(--accent)" stroke-width="2"/><rect x="${xx-12}" y="4" width="24" height="74" fill="transparent"/><circle cx="${xx}" cy="41" r="9" fill="var(--accent)" stroke="var(--panel)" stroke-width="2"/></g>`;}).join('')+`<text x="12" y="96" fill="var(--muted)" font-size="10">09:25</text><text x="${W*.5}" y="96" fill="var(--muted)" font-size="10" text-anchor="middle">11:30 / 13:00</text><text x="${W-12}" y="96" fill="var(--muted)" font-size="10" text-anchor="end">15:00</text>`;
 }
@@ -40,14 +41,19 @@ async function load({background=false}={}){
  abortController?.abort();abortController=new AbortController();const signal=abortController.signal;root.classList.add('loading');if(!background)notice('');
  try{
   const url=apiUrl('/api/rankings?'+new URLSearchParams({date,start:a,end:b})),res=await fetch(url,{signal}),d=await res.json();if(!res.ok||d.error)throw new Error(d.error||'查询失败');if(id!==requestId)return;
-  rows=d.list;currentDate=d._dataDate||d.Day?.[0]||date;source=d._source;appliedRange=[a,b];$('date').value=date==='latest'?new Date(Date.now()+28800000).toISOString().slice(0,10):date;
+  const nextDate=d._dataDate||d.Day?.[0]||date;if(nextDate!==currentDate){indexes=[];renderIndexes();}
+  rows=d.list;currentDate=nextDate;source=d._source;appliedRange=[a,b];$('date').value=date==='latest'?new Date(Date.now()+28800000).toISOString().slice(0,10):date;
   $('status').textContent={realtime:'实时行情',history:'历史行情',archive:'收盘归档',snapshot:'历史快照'}[source]||'行情';$('view-title').textContent=a==='0925'&&b==='1500'?'全市场资金榜':'区间资金榜';
   const dataTime=typeof d._dataTime==='number'?new Date(d._dataTime*1000).toLocaleTimeString('zh-CN',{timeZone:'Asia/Shanghai',hour12:false}):d._dataTime?clock(d._dataTime):'';
   $('asof').textContent=`查询 ${date==='latest'?'最新':date} · 行情 ${currentDate} ${dataTime} · ${clock(a)} — ${clock(b)} · ${$('status').textContent}`;
-  notice([d._warning,rows.length<number(d.Count)?`已返回 ${rows.length} 只 / 共 ${d.Count} 只，仅按已返回数据统计。`:''].filter(Boolean).join(' '));
+  const warning=[d._warning,rows.length<number(d.Count)?`已返回 ${rows.length} 只 / 共 ${d.Count} 只，仅按已返回数据统计。`:''].filter(Boolean).join(' ');notice(warning);
   $('retrieved').textContent='读取 '+new Date(d._retrievedAt||Date.now()).toLocaleTimeString('zh-CN',{hour12:false});$('source-line').textContent='来源：开盘啦 6.3.20.2 · '+(source==='realtime'?'NewStockRanking / RealRankingInfo_W8':'HisStockRanking / HisRankingInfo_W8');$('download').href=url;
   renderChips();renderTable();evaluateAlerts();
-  try{const r=await fetch(apiUrl('/api/indexes?date='+(source==='realtime'&&date==='latest'?'latest':currentDate)),{signal}),j=await r.json();if(id===requestId&&r.ok&&j.List?.length){indexes=j.List;renderIndexes();}}catch(error){if(error.name!=='AbortError'&&id===requestId)notice('指数走势查询失败；榜单数据仍为 '+currentDate+'。');}
+  try{
+   const r=await fetch(apiUrl('/api/indexes?date='+(source==='realtime'&&date==='latest'?'latest':currentDate)),{signal}),j=await r.json();if(id!==requestId)return;
+   if(!r.ok||j.error||!j.List?.length||j._dataDate&&j._dataDate!==currentDate)throw new Error('指数数据不可用');
+   indexes=j.List;renderIndexes();
+  }catch(error){if(error.name!=='AbortError'&&id===requestId){indexes=[];renderIndexes();notice([warning,'指数走势查询失败，已清空旧走势；榜单数据仍为 '+currentDate+'。'].filter(Boolean).join(' '),true);}}
  }catch(e){if(id===requestId&&e.name!=='AbortError'){notice(e.message+'；仍显示 '+currentDate+' 上次成功数据。',true);setMonitor({enabled:live,source,date:currentDate,count:alertMatches.length,alertsEnabled:alertSettings.enabled,error:e.message});}}
  finally{if(id===requestId){root.classList.remove('loading');saveView();}}
 }
@@ -90,7 +96,7 @@ function evaluateAlerts(force=false){
  $('history-hits').hidden=alertMode()!=='history';$('history-hits').textContent='历史条件命中 '+alertMatches.length+' 只 · 查看结果';
  if(!alertSettings.enabled||alertMode()==='history'){$('alert-toast').hidden=true;return;}
  const mode=alertMode(),prefix=mode+'|'+currentDate+'|',fresh=alertMatches.filter(r=>force||!alertSeen.has(prefix+r[0]));
- if(!fresh.length)return;
+ if(!fresh.length){$('alert-toast').hidden=true;return;}
  fresh.forEach(r=>alertSeen.add(prefix+r[0]));sessionStorage.setItem('kpl-alert-seen-v1',JSON.stringify([...alertSeen]));
  $('alert-toast-title').textContent=(mode==='live'?'实时组合提醒':'历史条件命中')+' · '+fresh.length+' 只';
  $('alert-toast-stocks').textContent=fresh.slice(0,3).map(r=>r[1]+'（'+money(r[13])+'）').join('、')+(fresh.length>3?' 等 '+fresh.length+' 只':'');
@@ -109,7 +115,7 @@ if(Number.isInteger(savedView.start))$('start-range').value=savedView.start;if(N
 selected=savedView.selected||selected;sort=columns.some(c=>c.key===savedView.sort)?savedView.sort:'net';direction=savedView.direction===1?1:-1;theme=savedView.theme||'';page=savedView.page||1;pageSize=savedView.pageSize||30;$('page-size').value=String(pageSize);live=!!savedView.live&&!initialRoute?.code;
 $('date').value=requestedDate==='latest'?new Date(Date.now()+28800000).toISOString().slice(0,10):requestedDate;$('date').max=new Date(Date.now()+28800000).toISOString().slice(0,10);$('live-toggle').textContent=live?'停止实时监控':'开启实时监控';
 if(matchMedia('(max-width:767px)').matches)$('timeline-panel').open=false;
-renderIndexes();renderChips();renderTable();updateRange();$('table-scroll').scrollTop=savedView.scroll||0;$('table-scroll').scrollLeft=savedView.scrollLeft||0;
+renderIndexes();renderChips();renderTable();updateRange();$('table-scroll').scrollTop=savedView.scroll||0;$('table-scroll').scrollLeft=savedView.scrollLeft||0;saveView();
 new ResizeObserver(renderMarketChart).observe($('market-chart').parentElement);$('timeline-panel').ontoggle=renderMarketChart;window.addEventListener('themechange',renderMarketChart);window.addEventListener('pagehide',saveView);$('table-scroll').addEventListener('scroll',saveView,{passive:true});
 $('status').textContent='历史快照';$('asof').textContent=currentDate+' 内置收盘快照 · 正在查询'+(requestedDate==='latest'?'最新行情':requestedDate);
 load();
@@ -122,6 +128,6 @@ $('download').onclick=async event=>{
   link.href=href;link.download='龙虎榜原始数据.json';link.click();setTimeout(()=>URL.revokeObjectURL(href),1000);
  }catch(error){notice(error.message,true);}
 };
-return {openAlerts,route:route=>stockView.route(route)};
+return {openAlerts,route:route=>{if(!root.hidden){$('table-scroll').scrollTop=tableScroll;$('table-scroll').scrollLeft=tableScrollLeft;}return stockView.route(route);}};
 
 }
