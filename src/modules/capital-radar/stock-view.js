@@ -10,10 +10,11 @@ export function createStockView(root,{navigate,getContext,onSelect}){
  function params(extra={}){return new URLSearchParams({code:state.code,date:state.date,...extra});}
  async function json(kind,extra,signal){const response=await fetch(apiUrl('/api/stock/'+kind+'?'+params(extra)),{signal}),data=await response.json();if(!response.ok||data.error)throw new Error(data.error||'行情查询失败');return data;}
  function showNotice(text){$('stock-notice').hidden=!text;$('stock-notice').textContent=text;}
- function neighbors(){const codes=getContext().rows.map(r=>String(r[0])),index=codes.indexOf(state.code);$('stock-prev').disabled=index<=0;$('stock-next').disabled=index<0||index===codes.length-1;return {codes,index};}
- function goStock(code,period=state.period){onSelect(code);navigate('capital-radar/stock/'+code+'?'+new URLSearchParams({date:state.date,period}));}
+ function context(){if(state?.from!=='home')return getContext();const rows=JSON.parse(sessionStorage.getItem('kpl-home-stocks')||'{}')[state.group];return {rows:Array.isArray(rows)?rows:[]};}
+ function neighbors(){const codes=context().rows.map(r=>String(r[0])),index=codes.indexOf(state.code);$('stock-prev').disabled=index<=0;$('stock-next').disabled=index<0||index===codes.length-1;return {codes,index};}
+ function goStock(code,period=state.period){if(state.from!=='home')onSelect(code);navigate('capital-radar/stock/'+code+'?'+new URLSearchParams({date:state.date,period,...(state.from==='home'?{from:'home',group:state.group}:{})}));}
  function summary(){
-  const row=getContext().rows.find(r=>String(r[0])===state.code),name=quote?.name||row?.[1]||'个股行情';$('quotation-title').textContent=name+' '+state.code;$('stock-chart').setAttribute('aria-label',name+' '+(state.period==='trend'?'分时走势':'K线及成交量'));
+  const row=context().rows.find(r=>String(r[0])===state.code),name=quote?.name||row?.[1]||'个股行情';$('quotation-title').textContent=name+' '+state.code;$('stock-chart').setAttribute('aria-label',name+' '+(state.period==='trend'?'分时走势':'K线及成交量'));
   const real=quote?.real,last=number(real?.last_px),change=number(real?.px_change_rate);$('stock-quote').replaceChildren();
   if(real){const price=document.createElement('strong');price.className=change>=0?'up':'down';price.textContent=last>0?last.toFixed(2):'—';$('stock-quote').append(price);const info=document.createElement('span');info.className=change>=0?'up':'down';info.textContent=(change>0?'+':'')+change.toFixed(2)+'%';$('stock-quote').append(info);const metrics=document.createElement('small');metrics.textContent='开 '+(number(real.open_px)>0?number(real.open_px).toFixed(2):'—')+' · 高 '+(number(real.high_px)>0?number(real.high_px).toFixed(2):'—')+' · 低 '+(number(real.low_px)>0?number(real.low_px).toFixed(2):'—')+' · 成交 '+money(real.total_turnover)+' · 行情 '+quote._dataDate;$('stock-quote').append(metrics);}else $('stock-quote').textContent='行情摘要暂不可用';
   neighbors();
@@ -61,11 +62,11 @@ export function createStockView(root,{navigate,getContext,onSelect}){
  }
  async function route(next){
   if(!next.code){const code=state?.code;state=null;request++;controller?.abort();if(dialog.open)dialog.close();if(code&&!root.hidden)root.querySelector('[data-stock="'+code+'"]')?.focus({preventScroll:true});return;}
-  if(state&&state.code===next.code&&state.date===next.date&&state.period===next.period&&dialog.open)return;
-  state={code:next.code,date:next.date||'latest',period:['trend','d','w','m','5','15','30','60'].includes(next.period)?next.period:'trend'};request++;controller?.abort();rows=[];quote=null;nextCursor=null;chart?.remove();chart=null;chartKind='';$('stock-readout').textContent='';$('stock-quote').textContent='';$('stock-meta').textContent='正在加载 '+state.code+'…';$('stock-more').hidden=true;
+  if(state&&state.code===next.code&&state.date===next.date&&state.period===next.period&&state.from===next.from&&state.group===next.group&&dialog.open)return;
+  state={code:next.code,date:next.date||'latest',from:next.from,group:next.group,period:['trend','d','w','m','5','15','30','60'].includes(next.period)?next.period:'trend'};request++;controller?.abort();rows=[];quote=null;nextCursor=null;chart?.remove();chart=null;chartKind='';$('stock-readout').textContent='';$('stock-quote').textContent='';$('stock-meta').textContent='正在加载 '+state.code+'…';$('stock-more').hidden=true;$('stock-back').textContent=state.from==='home'?'返回首页':'返回榜单';
   dialog.querySelectorAll('[data-period]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.period===state.period)));summary();if(!dialog.open)dialog.showModal();await load();
  }
- $('stock-back').onclick=()=>navigate('capital-radar');dialog.addEventListener('cancel',event=>{event.preventDefault();navigate('capital-radar');});
+ $('stock-back').onclick=()=>navigate(state?.from==='home'?'home':'capital-radar');dialog.addEventListener('cancel',event=>{event.preventDefault();navigate(state?.from==='home'?'home':'capital-radar');});
  $('stock-prev').onclick=()=>{const {codes,index}=neighbors();if(index>0)goStock(codes[index-1]);};$('stock-next').onclick=()=>{const {codes,index}=neighbors();if(index>=0&&index<codes.length-1)goStock(codes[index+1]);};
  dialog.querySelectorAll('[data-period]').forEach(button=>button.onclick=()=>goStock(state.code,button.dataset.period));$('stock-refresh').onclick=()=>load();$('stock-more').onclick=()=>load({more:true});$('stock-reset').onclick=()=>paint({reset:true});
  function zoom(factor){if(!chart)return;const range=chart.timeScale().getVisibleLogicalRange();if(!range)return;const middle=(range.from+range.to)/2,half=Math.max(5,(range.to-range.from)/2*factor);chart.timeScale().setVisibleLogicalRange({from:middle-half,to:middle+half});}

@@ -1,0 +1,49 @@
+<div class="home-page">
+ <header class="home-header">
+  <button class="home-avatar" type="button" id="home-account" aria-label="打开网站菜单"><img src="src/modules/home/assets/icon_default_head.png" alt=""></button>
+  <button class="home-search-launch" type="button" id="home-search-launch"><img src="src/modules/home/assets/ic_index_page_top_scan.png" alt=""><span>开盘啦｜搜索</span><img src="src/modules/home/assets/ic_index_page_top_search.png" alt=""></button>
+  <button class="home-message" type="button" id="home-message" aria-label="打开资金提醒"><img src="src/modules/home/assets/ic_msg.png" alt=""></button>
+ </header>
+ <div class="home-layout">
+  <section class="home-menu home-full" aria-label="功能入口">
+   <div class="home-menu-pages" id="home-menu-pages"><p class="home-empty">正在加载功能入口…</p></div>
+   <div class="home-dots" id="home-menu-dots" aria-label="功能入口分页"></div>
+  </section>
+  <section class="home-banner home-full" id="home-banners" aria-label="活动横幅"><div class="home-empty">正在加载…</div></section>
+  <div class="home-news-column">
+   <section class="home-section home-tomorrow" data-section="tomorrow">
+    <header><h2><img class="home-tomorrow-hot" src="src/modules/home/assets/tomorrow-hot.png" alt=""><img src="src/modules/home/assets/tomorrow-title.png" alt="明天炒什么"></h2><span class="home-date"></span><button type="button" data-more="tomorrow">查看全部 <span aria-hidden="true">›</span></button></header>
+    <div class="home-section-content"></div><p class="home-section-state"></p>
+   </section>
+   <section class="home-section" data-section="themes"><header><h2>题材库</h2><button type="button" data-more="themes">更多 <span aria-hidden="true">›</span></button></header><div class="home-section-content"></div><p class="home-section-state"></p></section>
+   <section class="home-section" data-section="articles"><header><h2>推荐文章</h2><button type="button" data-more="articles">更多 <span aria-hidden="true">›</span></button></header><div class="home-section-content"></div><p class="home-section-state"></p></section>
+  </div>
+  <div class="home-market-column">
+   <section class="home-section" data-section="popularity"><header><h2>开盘啦人气榜</h2><span class="home-date"></span><button type="button" data-more="popularity">更多 <span aria-hidden="true">›</span></button></header><div class="home-section-content"></div><p class="home-section-state"></p></section>
+   <section class="home-section" data-section="abnormal"><header><h2>严重异动提醒</h2><span class="home-date"></span><button type="button" data-more="abnormal">更多 <span aria-hidden="true">›</span></button></header><div class="home-section-content"></div><p class="home-section-state"></p></section>
+   <section class="home-section home-ai" data-section="ai"><header><h2>AI快讯 <span aria-hidden="true">›</span></h2><button type="button" data-more="ai" aria-label="查看更多AI快讯"></button></header><div class="home-section-content"></div><p class="home-section-state"></p></section>
+   <section class="home-section" data-section="strongest"><header><h2>最强风口</h2><span class="home-date"></span></header><div class="home-section-content"></div><p class="home-section-state"></p></section>
+   <section class="home-section" data-section="mood"><header><h2>市场情绪</h2><span class="home-date"></span><a href="#/sentiment">更多 <span aria-hidden="true">›</span></a></header><div class="home-section-content"></div><p class="home-section-state"></p></section>
+   <section class="home-section" data-section="topics"><header><h2>最新主题</h2><button type="button" data-more="topics">更多 <span aria-hidden="true">›</span></button></header><div class="home-section-content"></div><p class="home-section-state"></p></section>
+   <section class="home-section" data-section="vane"><header><h2>风向标</h2><button type="button" data-more="vane">更多 <span aria-hidden="true">›</span></button></header><div class="home-section-content"></div><p class="home-section-state"></p></section>
+   <section class="home-section" data-section="active"><header><h2>近期活跃板块</h2></header><div class="home-section-content"></div><p class="home-section-state"></p></section>
+   <section class="home-section" data-section="wind"><header><h2>市场风口</h2><button type="button" data-more="wind">更多 <span aria-hidden="true">›</span></button></header><div class="home-section-content"></div><p class="home-section-state"></p></section>
+  </div>
+ </div>
+ <footer class="home-data-footer"><span id="home-asof" role="status">正在获取首页数据…</span><button type="button" id="home-refresh">刷新</button><details><summary>数据来源</summary><div id="home-sources"></div></details></footer>
+ <button class="home-my-page" type="button" id="home-my-page">我的<br>版面 <span aria-hidden="true">›</span></button>
+ <button class="home-to-top" type="button" id="home-to-top" aria-label="回到顶部"><img src="src/modules/home/assets/ic_turn_top.png" alt=""></button>
+ <nav class="home-bottom-nav" aria-label="首页导航">
+  <a href="#/home" aria-current="page"><img src="src/modules/home/assets/ic_home_tab.png" alt=""><span>首页</span></a>
+  <button type="button" data-unavailable="行情"><img src="src/modules/home/assets/ic_markets_uncheck_tab.png" alt=""><span>行情</span></button>
+  <button type="button" data-unavailable="自选股"><img src="src/modules/home/assets/ic_stock_unchek_tab.png" alt=""><span>自选股</span></button>
+  <a href="#/capital-radar"><img src="src/modules/home/assets/ic_charts_uncheck_tab.png" alt=""><span>龙虎榜</span></a>
+  <button type="button" data-unavailable="推荐"><img src="src/modules/home/assets/ic_recommend_uncheck_tab.png" alt=""><span>推荐</span></button>
+ </nav>
+ <div class="home-toast" id="home-toast" role="status" hidden></div>
+ <dialog class="home-dialog home-search-dialog" id="home-search-dialog" aria-labelledby="home-search-title">
+  <form id="home-search-form"><label id="home-search-title" for="home-search-input">股票搜索</label><div><input id="home-search-input" type="search" placeholder="股票名称 / 代码 / 拼音" maxlength="40" autocomplete="off"><button type="submit">搜索</button><button type="button" data-close="home-search-dialog" aria-label="关闭搜索">关闭</button></div></form>
+  <p id="home-search-status" role="status"></p><div id="home-search-results"></div>
+ </dialog>
+ <dialog class="home-dialog home-account-dialog" id="home-account-dialog" aria-labelledby="home-account-title"><button class="dialog-close" type="button" data-close="home-account-dialog">关闭</button><h2 id="home-account-title">开盘数据</h2><nav><a href="#/home">首页</a><a href="#/sentiment">情绪周期</a><a href="#/capital-radar">实时龙虎榜</a><button type="button" id="home-theme">切换深浅主题</button></nav></dialog>
+</div>

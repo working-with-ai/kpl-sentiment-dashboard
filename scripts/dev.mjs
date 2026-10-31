@@ -6,7 +6,7 @@ http.createServer(async(req,res)=>{
  try{
   const url=new URL(req.url,'http://127.0.0.1:8766');
   if(url.pathname.startsWith('/api/')){
-   const response=await fetch('https://kpl-market-api.kpl-market-dashboard.workers.dev'+url.pathname+url.search);const headers=new Headers(response.headers);headers.delete('content-encoding');headers.delete('content-length');headers.delete('transfer-encoding');res.writeHead(response.status,Object.fromEntries(headers));res.end(Buffer.from(await response.arrayBuffer()));return;
+   const response=await fetch((process.env.KPL_API_ORIGIN||'https://kpl-market-api.kpl-market-dashboard.workers.dev')+url.pathname+url.search);const headers=new Headers(response.headers);headers.delete('content-encoding');headers.delete('content-length');headers.delete('transfer-encoding');res.writeHead(response.status,Object.fromEntries(headers));res.end(Buffer.from(await response.arrayBuffer()));return;
   }
   const path=resolve(root,'.'+decodeURIComponent(url.pathname==='/'?'/index.html':url.pathname));
   if(!path.startsWith(root+'/')){res.writeHead(403);res.end();return;}

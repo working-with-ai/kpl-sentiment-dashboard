@@ -11,7 +11,7 @@ let columnOrder=JSON.parse(localStorage.getItem('kpl-column-order')||'null')||co
 let visible=new Set(JSON.parse(localStorage.getItem('kpl-visible-columns')||'null')||['price','change','rangeChange','net','amount','two','pop','turnover']),rows=seed.ranking.list,indexes=seed.indexes.List,selected=rows[0]?.[0],sort='net',direction=-1,theme='',page=1,pageSize=30,filtered=[],currentDate='2026-10-23',live=false,requestId=0,source='snapshot',appliedRange=['0925','1500'];
 const minutes=['0925'];for(let h=9;h<=15;h++)for(let m=0;m<60;m++){const x=h*60+m;if((x>=570&&x<=690)||(x>=780&&x<=900))minutes.push(String(h).padStart(2,'0')+String(m).padStart(2,'0'));}
 $('start-range').max=$('end-range').max=minutes.length-1;$('end-range').value=minutes.length-1;
-let requestedDate=initialRoute?.code?initialRoute.date:(savedView.requestedDate||'latest'),abortController;
+let requestedDate=initialRoute?.code&&initialRoute.from!=='home'?initialRoute.date:(savedView.requestedDate||'latest'),abortController;
 const stockView=createStockView(root,{navigate,getContext:()=>({rows:filtered,date:source==='realtime'&&requestedDate==='latest'?'latest':currentDate}),onSelect:code=>{selected=code;renderTable();}});
 function saveView(){if(!root.hidden){tableScroll=$('table-scroll').scrollTop;tableScrollLeft=$('table-scroll').scrollLeft;}sessionStorage.setItem('kpl-radar-view',JSON.stringify({requestedDate,live,date:$('date').value,start:Number($('start-range').value),end:Number($('end-range').value),search:$('search').value,board:$('board').value,flow:$('flow').value,cap:$('marketcap').value,noST:$('no-st').checked,selected,sort,direction,theme,page,pageSize,scroll:tableScroll,scrollLeft:tableScrollLeft}));}
 const range=()=>[minutes[Number($('start-range').value)],minutes[Number($('end-range').value)]];
@@ -112,7 +112,7 @@ $('alert-form').onsubmit=event=>{event.preventDefault();Object.assign(alertSetti
 setInterval(()=>{if(live&&!document.hidden&&!root.classList.contains('loading'))load({background:true});},10000);
 if(savedView.search)$('search').value=savedView.search;for(const [id,key] of [['board','board'],['flow','flow'],['marketcap','cap']])if(savedView[key])$(id).value=savedView[key];$('no-st').checked=!!savedView.noST;
 if(Number.isInteger(savedView.start))$('start-range').value=savedView.start;if(Number.isInteger(savedView.end))$('end-range').value=savedView.end;
-selected=savedView.selected||selected;sort=columns.some(c=>c.key===savedView.sort)?savedView.sort:'net';direction=savedView.direction===1?1:-1;theme=savedView.theme||'';page=savedView.page||1;pageSize=savedView.pageSize||30;$('page-size').value=String(pageSize);live=!!savedView.live&&!initialRoute?.code;
+selected=savedView.selected||selected;sort=columns.some(c=>c.key===savedView.sort)?savedView.sort:'net';direction=savedView.direction===1?1:-1;theme=savedView.theme||'';page=savedView.page||1;pageSize=savedView.pageSize||30;$('page-size').value=String(pageSize);live=!!savedView.live&&(!initialRoute?.code||initialRoute.from==='home');
 $('date').value=requestedDate==='latest'?new Date(Date.now()+28800000).toISOString().slice(0,10):requestedDate;$('date').max=new Date(Date.now()+28800000).toISOString().slice(0,10);$('live-toggle').textContent=live?'停止实时监控':'开启实时监控';
 if(matchMedia('(max-width:767px)').matches)$('timeline-panel').open=false;
 renderIndexes();renderChips();renderTable();updateRange();$('table-scroll').scrollTop=savedView.scroll||0;$('table-scroll').scrollLeft=savedView.scrollLeft||0;saveView();
